@@ -16,6 +16,8 @@ int     columnInInt;
 int     rowIn;
 int     numberIn;
 int     emptyFields = 81;
+int     tryCounter = 0;
+int     maxTries = 500;
 
 //graphics section
 
@@ -36,7 +38,7 @@ void fillArrayWithHash(){
     int count = 0;
     for(int i = 0; i < 9; i++){
         for(int j = 0; j < 9; j++){
-            saveGameNumbers[i][j] = '#';
+            saveGameNumbers[i][j] = '0';
             count++;
         }
     }
@@ -58,12 +60,12 @@ void printSeperatorLine(){
 }
 
 void buildField(){
-    printTopLine();
-    printSeperatorLine();
+    printf("    a b c   d e f   g h i\n"); //the letters for the columns
+    printf  ("%s", horizontalLine); //the seperator line
     for(int i = 1; i < 10; i++){
         generateField1x9(i);
         if((i%3) == 0){
-            printSeperatorLine();
+            printf  ("%s", horizontalLine); //seperator line in between
         }
     }
 
@@ -72,7 +74,7 @@ void buildField(){
 //rule section
 
 int checkIfAlreadyFilled(int row, int column){ //returns 0 if the field is empty, -1 if there is a number in it
-    if(saveGameNumbers[row][column] == '#'){
+    if(saveGameNumbers[row][column] == '0'){
         return 0;
     }
     else{
@@ -88,7 +90,7 @@ int checkIfNumberIsAllowedColumn(int input, int column){ //returns -1 if number 
         lenghtCheck[i] = saveGameNumbers[i][column]; //copy numbers in this column to the ckeck array
     }
     for(int i = 0; i < 9; i++){
-        if(lenghtCheck[i] != '#'){ //check if the Number at this place is still a '#'
+        if(lenghtCheck[i] != '0'){ //check if the Number at this place is still a '0'
             if(usedNumbers[lenghtCheck[i]-48] == '1'){ //if not, check if the number was allready used once in this column
                 return -2; //if it was used allready, return that this number cannot be used in this position
             }
@@ -119,7 +121,7 @@ int checkIfNumberIsAllowedRow(int input, int row){ //-1 is number is used allrea
         lenghtCheck[i] = saveGameNumbers[row][i]; //copy the numbers to the check array again
     }
     for(int i = 0; i < 9; i++){
-        if(lenghtCheck[i] != '#'){ //check if the Number at this place is still a '#'
+        if(lenghtCheck[i] != '0'){ //check if the Number at this place is still a '0'
             if(usedNumbers[lenghtCheck[i]-48] == '1'){ //if not, check if the number was allready used once in this row
                 return -2; //if it was used allready, return that this number cannot be used in this position
             }
@@ -193,27 +195,32 @@ int checkIfNumberIsAllowedGrid(int input, int row, int column){
     default:
         break;
     }
-
+/*
     for(int i = 0; i < 3; i++){
         for(int j = 0; j < 3; j++){
             fieldCheck[i][j] = saveGameNumbers[i+modifyRow][j+modifyCollumn]; //transfer the data from the game save to the check array so if we break anything it isnt as bad^^^^
         }
     }
-
-
-    for(int i = 0; i < 3; i++){
-        for(int j = 0; j < 3; i++){
-            if(fieldCheck[i][j] != '#'){ //check if the char at position is not '#' => Doesnt work right now, still gets to the else part
-                if(usedNumbers[(fieldCheck[i][j])-'0'] == '0'){ //if it has not been used allready, continue
-                    usedNumbers[fieldCheck[i][j]] = '1'; //put the info that this number has been used 
+*/
+    int count = 0;
+    for(int k = 0; k < 3; k++){
+        count++;
+        //printf("k: %d, count: %d\n", k, count); // Debugging statement
+        for(int l = 0; l < 3; l++){
+           // printf("k: %d, l: %d\n", k, l); // Debugging statement
+            if(saveGameNumbers[k+modifyRow][l+modifyCollumn] != '0'){ //check if the char at position is not '0' => Doesnt work right now, still gets to the else part
+                if(usedNumbers[(saveGameNumbers[k+modifyRow][l+modifyCollumn])-'0'] == '0'){ //if it has not been used allready, continue
+                    usedNumbers[saveGameNumbers[k+modifyRow][l+modifyCollumn]-'0'] = '1'; //put the info that this number has been used 
                 }
                 else{ 
-                    if (usedNumbers[(fieldCheck[i][j])-'0'] == '1'){ //check if the number has been if it hasnt been not used
+                    if (usedNumbers[(saveGameNumbers[k+modifyRow][l+modifyCollumn])-'0'] == '1'){ //check if the number has been if it hasnt been not used
                         return -1; //return that this number cannot be used at this position
                     }
                     else{
                         printf("Something went wrong, this state should not be reachable. \n This means that in my check, something else then a number was written to the field.\n");
-                        printf("In the field %d %d was %s \n", i, j, usedNumbers[fieldCheck[i][j]-'0']);
+                        printf("In the field %d %d was %s \n", k, l, usedNumbers[fieldCheck[k][l]-'0']);
+                        printf("%d\n", '0'-'0');
+                        printf("%d\n", '6'-'0');
                         return 100;
                     }
                 }
@@ -239,6 +246,13 @@ int checkIfNumberIsAllowedGrid(int input, int row, int column){
 //generation section
 
 int fillRandomField(){
+    tryCounter++;
+    if(tryCounter >= maxTries){
+        fillArrayWithHash();
+        emptyFields = 81;
+        printf("Reset game at %d tries", tryCounter);
+        tryCounter = 0;
+    }
     if(emptyFields == 0){
         printf("All fields filled, no more random filling possible");
         return -1;
@@ -250,15 +264,23 @@ int fillRandomField(){
     printf("  %d    %d      %d \n row column input \n", rRow, rColumn, rInput);
 
     if(checkIfAlreadyFilled(rRow, rColumn) == -1){
+        printf("Field allready used, generating new\n");
+        printf("Remaining fields: %d\n", emptyFields);
         fillRandomField();
     }
     else{
-        if(checkIfNumberIsAllowedColumn(rInput, rColumn) == 0 && checkIfNumberIsAllowedGrid(rInput, rRow, rColumn) == 0 && checkIfNumberIsAllowedRow(rInput, rRow)){
-            saveGameNumbers[rRow][rColumn] == rInput;
-            //put stack here
+        if(checkIfNumberIsAllowedColumn(rInput, rColumn) == 0 && checkIfNumberIsAllowedGrid(rInput, rRow, rColumn) == 0 && checkIfNumberIsAllowedRow(rInput, rRow) == 0){
+            printf("All numbers are correct and allowed \n");
+            saveGameNumbers[rRow][rColumn] = rInput + '0';
+            emptyFields--;
+            return 0;
+        }
+        else{
+            printf("Numbers not allowed, generating new\n");
+            fillRandomField();
         }
     }
-
+    return -1;
 
 }
 
@@ -267,7 +289,7 @@ int fillRandomField(){
 
 void cleanInputVariables(){ //puts demo inputs into the variables so it is easier to determine wrong or broken inputs
     rowIn = -1;
-    columnInChar = '#';
+    columnInChar = '0';
     columnInInt = -1;
     numberIn = -1;
 }
@@ -322,7 +344,7 @@ int transformColumn(){ //Transforms the letter input for column to an intiger fo
         printf("Please input a valid column. \n Only columns between a and i are valid \n");
         break;
     }
-    columnInChar = '#';
+    columnInChar = '0';
 }
 
 int validateInputPossible(){ //validates that the input is possible to be tested against the field. Inputs that are outside of this field will be cought here
@@ -387,11 +409,23 @@ int validateInputnoRulesBroken(int input, int row, int column){ //return 0 = ok,
 }
 
 void main(){
+    clock_t start, end;
+    start = clock();
+    srand(time(NULL));
     fillArrayWithHash();
     buildField();
-    fillRandomField();
-
+    printf("fieldfill returned %d\n", fillRandomField());
+    int count = 0;
+    while(emptyFields != 0){
+        printf("fieldfill returned %d\n", fillRandomField());
+        printf("Empty fields: %d \n", emptyFields);
+        buildField();
+        count++;
+    }
     buildField();
+    printf("Fields remaining to be filled: %d\n", emptyFields);
+    end = clock();
+    printf("Time taken: %f Seconds \n, count = %d\n\n", ((double)end-start/CLOCKS_PER_SEC)/100000, count);
 }
 
 

@@ -7,6 +7,9 @@ char    post[] = " |";
 char    horizontalLine[] = "---------------------------\n";
 int     countLines = 1;
 char    saveGameNumbers[9][9];
+int     tries = 0;
+int     errors = 0;
+int     problem1, error2, error3, error4 = 0;
 
 
 void generateField1x9(int row){
@@ -73,23 +76,24 @@ int columnOK(int column, int input){  //0 if ok, 1 if not
 }
 
 int findRowBig(int row){  //0 for first block, 3 for seckond, 6 for third
-    int modifyRow;
+    int modifyRow = 0;
     switch (row)
     {
+    case 0:
     case 1:
     case 2:
-    case 3:
         modifyRow = 0;
         break;
+    case 3:
     case 4:
     case 5:
-    case 6:
         modifyRow = 3;
         break;
+    case 6:
     case 7:
     case 8:
-    case 9:
         modifyRow = 6;
+        break;
     default:
         break;
     }
@@ -97,23 +101,24 @@ int findRowBig(int row){  //0 for first block, 3 for seckond, 6 for third
 }
 
 int findColumnBig(int column){ //0 for first block, 3 for seckond, 6 for third
-    int modifyCollumn;
+    int modifyCollumn = 0;
     switch (column)
     {
+    case 0:
     case 1:
     case 2:
-    case 3:
         modifyCollumn = 0;
         break;
+    case 3:
     case 4:
     case 5:
-    case 6:
         modifyCollumn = 3;
         break;
+    case 6:
     case 7:
     case 8:
-    case 9:
         modifyCollumn = 6;
+        break;
     default:
         break;
     }
@@ -137,18 +142,22 @@ int numberInsertable(int row, int column, int input){ //0 if yes, 1 if field not
     row--;
     column--;
     if(fieldEmpty(row, column) == 1){
+        problem1++;
         return 1;
     }
 
     if(rowOK(row, input) == 1){
+        error2++;
         return 2;
     }
 
     if(columnOK(column, input) == 1){
+        error3++;
         return 3;
     }
 
     if(blockOK(row, column, input) == 1){
+        error4++;
         return 4;
     }
 
@@ -156,14 +165,31 @@ int numberInsertable(int row, int column, int input){ //0 if yes, 1 if field not
 }
 
 void insertNumber(int row, int column, int input){
-    saveGameNumbers[row-1][column-1] = input+'0';
+    if(numberInsertable(row, column, input) == 0){
+        saveGameNumbers[row-1][column-1] = input+'0';
+    }
+    else{
+        printf("Error code %d\n", numberInsertable(row, column, input));
+        errors++;
+    }
 }
 
+void insertRandom(){
+    int rRow = (rand() % 8) +1;
+    int rColumn = (rand() % 8) +1;
+    int rInput = (rand() % 8) +1;
+    insertNumber(rRow, rColumn, rInput);
+    tries++;
+}
 
 void main(){
+    srand(time(NULL));
     prepareGamefield();
-    if(numberInsertable(5, 5, 5) == 0){
-        insertNumber(5, 5, 5);
+    for(int i = 0; i < 2000; i++){
+        insertRandom();
     }
     buildField();
+    printf("Tries: %d\n", tries);
+    printf("Errors: %d\n", errors);
+    printf("Davon %d Feld schon belegt \n%d reihe hat schon die zahl \n%d spalte hat schon die Zahl \n%d kasten hat schon die zahl\n", problem1, error2, error3, error4);
 }

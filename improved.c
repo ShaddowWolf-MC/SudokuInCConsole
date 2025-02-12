@@ -10,7 +10,29 @@ char    saveGameNumbers[9][9];
 int     tries = 0;
 int     errors = 0;
 int     problem1, error2, error3, error4 = 0;
+char    buildstack[90][9][9];
+int     frame = 0; //counter for the buildstack
+int     emptyFields = 81;
 
+void putCurrentGameOnStack(){ //puts the current game on the stack
+    for(int i = 0; i < 9; i++){
+        for (int j = 0; j < 9; j++)
+        {
+            buildstack[frame][i][j] = saveGameNumbers[i][j];
+        }
+        
+    }
+}
+
+void revertToFrame(int Frame){ //reverts the game back to the given frame, pulls the data from the buildstack
+    frame = Frame;
+    for(int i = 0; i < 9; i++){
+        for (int j = 0; j < 9; j++)
+        {
+            saveGameNumbers[i][j] = buildstack[frame][i][j];
+        }
+    }
+}
 
 void generateField1x9(int row){
     printf("%d %s", row, pre); //puts the forthermost part of the gamefield down
@@ -165,19 +187,25 @@ int numberInsertable(int row, int column, int input){ //0 if yes, 1 if field not
 }
 
 void insertNumber(int row, int column, int input){
-    if(numberInsertable(row, column, input) == 0){
-        saveGameNumbers[row-1][column-1] = input+'0';
-    }
-    else{
-        printf("Error code %d\n", numberInsertable(row, column, input));
-        errors++;
-    }
+    if(emptyFields > 0){
+        if(numberInsertable(row, column, input) == 0){
+            saveGameNumbers[row-1][column-1] = input+'0';
+            frame++;
+            putCurrentGameOnStack();
+            emptyFields--;
+        }
+        else{
+            printf("Error code %d\n", numberInsertable(row, column, input));
+            errors++;
+        }
+    }   
 }
 
 void insertRandom(){
-    int rRow = (rand() % 8) +1;
-    int rColumn = (rand() % 8) +1;
-    int rInput = (rand() % 8) +1;
+
+    int rRow = (rand() % 9) +1;
+    int rColumn = (rand() % 9) +1;
+    int rInput = (rand() % 9) +1;
     insertNumber(rRow, rColumn, rInput);
     tries++;
 }
@@ -185,11 +213,12 @@ void insertRandom(){
 void main(){
     srand(time(NULL));
     prepareGamefield();
-    for(int i = 0; i < 2000; i++){
+    for(int i = 0; i < 20000; i++){
         insertRandom();
     }
     buildField();
     printf("Tries: %d\n", tries);
     printf("Errors: %d\n", errors);
+    printf("Empty fields: %d\n", emptyFields);
     printf("Davon %d Feld schon belegt \n%d reihe hat schon die zahl \n%d spalte hat schon die Zahl \n%d kasten hat schon die zahl\n", problem1, error2, error3, error4);
 }
